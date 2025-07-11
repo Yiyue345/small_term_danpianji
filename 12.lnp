@@ -3,6 +3,7 @@
 "smg.obj",
 "iic.obj",
 "ls138.obj",
-"main.obj" 
+"main.obj",
+"ds1302.obj" 
 TO "12" 
 RAMSIZE(256) 

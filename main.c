@@ -4,6 +4,7 @@
 #include "delay.h"
 #include "iic.h"
 #include "keyboard.h"
+#include "ds1302.h"
 
 sbit  RST=P2^4;				  
 sbit  CLK=P2^3;				   
@@ -128,12 +129,39 @@ void serviceTimer0() interrupt 1{
 	
 //��main�����������Ŀ�߼�����
 void main()	{
+	// 初始化定时器
+	InitTimer0();
+	
+	// 初始化DS1302
+	Ds1302_Init();
+	
+	// 延时一下让DS1302稳定
+	delay(100);
+	
+	// 写入默认时间
+	Ds1302_Write_Time(); 
+	
+	// 再次延时
+	delay(100);
+	
 	while (1) {
-		unsigned char key = readKey();
-		if (key) {
-			updateLed(1, key % 9);
-		}
+		// 读取当前时间
+		Ds1302_Read_Time();
+		
+		// 显示时:分:秒 格式
+		updateLed(0, cur_time_buf[2] / 10);  // 时的十位
+		updateLed(1, cur_time_buf[2] % 10);  // 时的个位
+		updateLed(2, 11);                    // 分隔符 "-"
+		updateLed(3, cur_time_buf[1] / 10);  // 分的十位
+		updateLed(4, cur_time_buf[1] % 10);  // 分的个位
+		updateLed(5, 11);                    // 分隔符 "-"
+		updateLed(6, cur_time_buf[0] / 10);  // 秒的十位
+		updateLed(7, cur_time_buf[0] % 10);  // 秒的个位
+
 		showLed();
+		
+		// 添加延时，避免读取过于频繁
+		delay(10);
 	}
 	
 }

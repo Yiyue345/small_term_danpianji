@@ -1,0 +1,137 @@
+C51 COMPILER V9.56.0.0   DS1302                                                            07/11/2025 17:10:32 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE DS1302
+OBJECT MODULE PLACED IN ds1302.OBJ
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ds1302.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          #include "ds1302.h"
+   3          
+   4          unsigned char code READ_RTC_ADDR[7] = {0x81, 0x83, 0x85, 0x87, 0x89, 0x8b, 0x8d}; // RTC读地址
+   5          unsigned char code WRITE_RTC_ADDR[7] = {0x80, 0x82, 0x84, 0x86, 0x88, 0x8a, 0x8c}; // RTC写地址
+   6          // 修改默认时间为BCD格式：12时34分56秒，07日，07月，21年，星期6
+   7          unsigned char TIME[7] = {0x56, 0x34, 0x12, 0x07, 0x07, 0x06, 0x21}; 
+   8          unsigned char cur_time_buf[7]; // 存储转换后的十进制时间
+   9          
+  10          // DS1302底层通信函数
+  11          void Ds1302_Write_Byte(unsigned char addr, unsigned char dat) {
+  12   1          unsigned char i;
+  13   1          
+  14   1          RST_SET; // 启动传输
+  15   1          
+  16   1          // 发送地址字节
+  17   1          for (i = 0; i < 8; i++) {
+  18   2              SCK_CLR;
+  19   2              if (addr & 0x01) {
+  20   3                  DAT_SET;
+  21   3              } else {
+  22   3                  DAT_CLR;
+  23   3              }
+  24   2              addr >>= 1;
+  25   2              SCK_SET;
+  26   2          }
+  27   1          
+  28   1          // 发送数据字节
+  29   1          for (i = 0; i < 8; i++) {
+  30   2              SCK_CLR;
+  31   2              if (dat & 0x01) {
+  32   3                  DAT_SET;
+  33   3              } else {
+  34   3                  DAT_CLR;
+  35   3              }
+  36   2              dat >>= 1;
+  37   2              SCK_SET;
+  38   2          }
+  39   1          
+  40   1          RST_CLR; // 结束传输
+  41   1      }
+  42          
+  43          unsigned char Ds1302_Read_Byte(unsigned char addr) {
+  44   1          unsigned char i, dat = 0;
+  45   1          
+  46   1          RST_SET; // 启动传输
+  47   1          
+  48   1          // 发送地址字节
+  49   1          for (i = 0; i < 8; i++) {
+  50   2              SCK_CLR;
+  51   2              if (addr & 0x01) {
+  52   3                  DAT_SET;
+  53   3              } else {
+  54   3                  DAT_CLR;
+  55   3              }
+C51 COMPILER V9.56.0.0   DS1302                                                            07/11/2025 17:10:32 PAGE 2   
+
+  56   2              addr >>= 1;
+  57   2              SCK_SET;
+  58   2          }
+  59   1          
+  60   1          // 读取数据字节前，需要将数据线设置为输入
+  61   1          // 读取数据字节
+  62   1          for (i = 0; i < 8; i++) {
+  63   2              SCK_CLR;
+  64   2              SCK_SET;
+  65   2              if (DS1302_DAT) {
+  66   3                  dat |= (0x01 << i);
+  67   3              }
+  68   2          }
+  69   1          
+  70   1          RST_CLR; // 结束传输
+  71   1          SCK_CLR; // 确保时钟线为低
+  72   1          return dat;
+  73   1      }
+  74          
+  75          void Ds1302_Init(void) {
+  76   1          RST_CLR;
+  77   1          SCK_CLR;
+  78   1          // 首先解除写保护
+  79   1          Ds1302_Write_Byte(0x8e, 0x00);
+  80   1          // 启动时钟（清除秒寄存器的CH位）
+  81   1          Ds1302_Write_Byte(Ds1302_sec_add, 0x00);
+  82   1          // 重新启用写保护
+  83   1          Ds1302_Write_Byte(0x8e, 0x80);
+  84   1      }
+  85          
+  86          void Ds1302_Write_Time(void) {
+  87   1          unsigned char i;
+  88   1          
+  89   1          Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
+  90   1          for (i = 0; i < 7; i++) {
+  91   2              Ds1302_Write_Byte(WRITE_RTC_ADDR[i], TIME[i]);
+  92   2          }
+  93   1          Ds1302_Write_Byte(0x8e, 0x80); // 允许写保护
+  94   1          
+  95   1      }
+  96          
+  97          void Ds1302_Read_Time(void) {
+  98   1          unsigned char i, temp;
+  99   1          
+ 100   1          for (i = 0; i < 7; i++) {
+ 101   2              TIME[i] = Ds1302_Read_Byte(READ_RTC_ADDR[i]);
+ 102   2          }
+ 103   1      
+ 104   1          for (i = 0; i < 7; i++) {
+ 105   2              temp = TIME[i] / 16;
+ 106   2              cur_time_buf[i] = TIME[i] % 16;
+ 107   2              cur_time_buf[i] += temp * 10; // 转换BCD码
+ 108   2          }
+ 109   1      }
+ 110          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    234    ----
+   CONSTANT SIZE    =     14    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+C51 COMPILER V9.56.0.0   DS1302                                                            07/11/2025 17:10:32 PAGE 3   
+
+   DATA SIZE        =     14    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

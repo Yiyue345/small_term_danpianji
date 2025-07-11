@@ -10,22 +10,24 @@ unsigned char duanx[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // �
 void showLed() {
     static unsigned char index = 0;
 
-    P2 = 0xc0;
+    // 使用SelectHC573函数安全地选择数码管位选通道（Y6）
+    SelectHC573(6);
 	P0 = weix[index];
 
-
-	P2 = 0xe0;
-	
+    // 使用SelectHC573函数安全地选择数码管段选通道（Y7）
+	SelectHC573(7);
 	P0 = duanx[index];
     
-    
     delayMs(1); // 确保数码管有足够时间显示
+    
+    // 关闭所有选择，避免干扰
+    // SelectHC573(0);
     P0 = 0x00; // 清除段选
+    
     index++;
     if (index >= 8) {
         index = 0;
     }
-    
 }
 
 void updateLed(unsigned char index, unsigned char digit) {
