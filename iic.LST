@@ -1,0 +1,219 @@
+C51 COMPILER V9.56.0.0   IIC                                                               07/11/2025 16:27:15 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE IIC
+OBJECT MODULE PLACED IN iic.OBJ
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE iic.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          
+   2          /*-----------------------------------------------
+   3            名称：IIC协议 
+   4            论坛：www.doflye.net
+   5            编写：shifang
+   6            修改：无
+   7            内容：函数是采用软件延时的方法产生SCL脉冲,固对高晶振频率要作 一定的修改....(本例是1us机器
+   8              周期,即晶振频率要小于12MHZ)
+   9          ------------------------------------------------*/  
+  10            
+  11          #include "iic.h"
+  12          #include "delay.h"
+  13          #include <reg52.h> 
+  14          
+  15          
+  16          #define ADDR_PCF8591  0x90  //PCF8591器件地址
+  17          #define ADDR_24C02    0xA0  //24C02器件地址
+  18          
+  19          sbit SDA=P2^0;
+  20          sbit SCL=P2^1;
+  21          
+  22          void Delay_IIC(unsigned char time){
+  23   1        while(time--);
+  24   1      }
+  25          void delay_x_ms(unsigned int m)
+  26          {
+  27   1      unsigned int i,j;
+  28   1      for(i=0;i<m;i++)
+  29   1         {
+  30   2         for(j=0;j<121;j++)
+  31   2            {
+  32   3            ;
+  33   3            }
+  34   2         }
+  35   1      }
+  36          void IIC_Start(void){
+  37   1        SDA=1;
+  38   1        SCL=1;
+  39   1        Delay_IIC(5);
+  40   1        SDA=0;
+  41   1        Delay_IIC(5);
+  42   1        SCL=0;
+  43   1      }
+  44          
+  45          void IIC_Stop(void){
+  46   1        SDA=0;
+  47   1        SCL=1;
+  48   1        Delay_IIC(5);
+  49   1        SDA=1;
+  50   1        Delay_IIC(5);
+  51   1      }
+  52          
+  53          void IIC_Ack(unsigned char ackbit){
+  54   1        if(ackbit)  SDA=0;
+  55   1        else    SDA=1;
+C51 COMPILER V9.56.0.0   IIC                                                               07/11/2025 16:27:15 PAGE 2   
+
+  56   1      
+  57   1        Delay_IIC(5);
+  58   1        SCL=1;
+  59   1        Delay_IIC(5);
+  60   1        SCL=0;
+  61   1        SDA=1;
+  62   1        Delay_IIC(5);;
+  63   1      }
+  64          
+  65          bit IIC_WaitAck(void){
+  66   1        SDA=1;
+  67   1        Delay_IIC(5);
+  68   1        SCL=1;
+  69   1        Delay_IIC(5);
+  70   1      
+  71   1        if(SDA){
+  72   2          SCL=0;
+  73   2          IIC_Stop();
+  74   2          return 0;
+  75   2        }
+  76   1        else{
+  77   2          SCL=0;
+  78   2          return 1;
+  79   2        }
+  80   1      }
+  81          
+  82          void IIC_SendByte(unsigned char byt){
+  83   1        unsigned char i;
+  84   1        for(i=0;i<8;i++){
+  85   2          if(byt & 0x80)  
+  86   2            SDA=1;
+  87   2          else      
+  88   2            SDA=0;
+  89   2          Delay_IIC(5);
+  90   2          SCL=1;
+  91   2          byt<<=1;
+  92   2          Delay_IIC(5);
+  93   2          SCL=0;
+  94   2        }
+  95   1      }
+  96          
+  97          unsigned char IIC_RecByte(void){
+  98   1        unsigned char da, i;
+  99   1        for(i=0;i<8;i++){
+ 100   2          SCL=1;
+ 101   2          Delay_IIC(5);
+ 102   2          da<<=1;
+ 103   2          if(SDA) da|=0x01;
+ 104   2          SCL=0;
+ 105   2          Delay_IIC(5);
+ 106   2        }
+ 107   1        return da;
+ 108   1      }
+ 109          
+ 110          
+ 111          /*----------------------------------------------------------------
+ 112                              向有子地址器件发送多字节数据函数               
+ 113          功能:     从启动总线到发送地址，子地址,数据，结束总线的全过程,
+ 114                从器件地址sla，子地址suba，发送内容是s指向的内容，发送no个字节。
+ 115                     如果返回1表示操作成功，否则操作有误。
+ 116          注意：    使用前必须已结束总线。
+ 117          ----------------------------------------------------------------*/
+C51 COMPILER V9.56.0.0   IIC                                                               07/11/2025 16:27:15 PAGE 3   
+
+ 118          void sendBytesTo24C02(unsigned char suba,unsigned char *p,unsigned char no)
+ 119          {
+ 120   1          unsigned char i;
+ 121   1          for(i=0;i<no;i++) { 
+ 122   2            IIC_Start();                //启动总线
+ 123   2            IIC_SendByte(ADDR_24C02);   //发送器件地址
+ 124   2            IIC_WaitAck();
+ 125   2            IIC_SendByte(suba);         //发送器件子地址
+ 126   2            IIC_WaitAck();
+ 127   2            IIC_SendByte(*p);            //发送数据
+ 128   2            IIC_WaitAck();
+ 129   2            IIC_Stop();                  //结束总线
+ 130   2            p++;
+ 131   2            suba++;
+ 132   2            delay_x_ms(10);
+ 133   2          } 
+ 134   1      
+ 135   1      }
+ 136          
+ 137          
+ 138          /*----------------------------------------------------------------
+ 139                              向有子地址器件读取多字节数据函数               
+ 140          功能:     从启动总线到发送地址，子地址,读数据，结束总线的全过程,从器件
+ 141                    地址sla，子地址suba，读出的内容放入s指向的存储区，读no个字节。
+ 142                     如果返回1表示操作成功，否则操作有误。
+ 143          注意：    使用前必须已结束总线。
+ 144          ----------------------------------------------------------------*/
+ 145          void recBytesFrom24C02(unsigned char suba,unsigned char *p,unsigned char no)
+ 146          {
+ 147   1        unsigned char i;
+ 148   1          IIC_Start();               //启动总线      
+ 149   1          IIC_SendByte(ADDR_24C02);             //发送器件地址
+ 150   1        IIC_WaitAck();    
+ 151   1        IIC_SendByte(suba);            //发送器件子地址
+ 152   1        IIC_WaitAck();
+ 153   1          IIC_Start();
+ 154   1          IIC_SendByte(ADDR_24C02+1);       //读动作 1
+ 155   1        IIC_WaitAck();
+ 156   1          
+ 157   1        for(i=0;i<no-1;i++) { 
+ 158   2            *p=IIC_RecByte();              //发送数据
+ 159   2              IIC_Ack(1);                //发送就答位 
+ 160   2            p++;
+ 161   2          delay_x_ms(10);
+ 162   2          } 
+ 163   1          *p=IIC_RecByte();
+ 164   1          IIC_Ack(0);                 //发送非应位
+ 165   1          IIC_Stop();                    //结束总线
+ 166   1          //return(1);
+ 167   1      }
+ 168          
+ 169          
+ 170          unsigned char Read_PCF8591(unsigned char com ){
+ 171   1        unsigned char dat;
+ 172   1      
+ 173   1        IIC_Start();                
+ 174   1        IIC_SendByte(ADDR_PCF8591);         
+ 175   1        IIC_WaitAck();                
+ 176   1        IIC_SendByte(com);          
+ 177   1        IIC_WaitAck();                
+ 178   1        IIC_Stop();               
+ 179   1      
+C51 COMPILER V9.56.0.0   IIC                                                               07/11/2025 16:27:15 PAGE 4   
+
+ 180   1        IIC_Start();                  
+ 181   1        IIC_SendByte(ADDR_PCF8591+1);           
+ 182   1        IIC_WaitAck();                    
+ 183   1        dat = IIC_RecByte();      
+ 184   1        IIC_Ack(0);                 
+ 185   1        IIC_Stop();                   
+ 186   1      
+ 187   1        return dat;
+ 188   1      }
+ 189          
+ 190          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    411    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      12
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

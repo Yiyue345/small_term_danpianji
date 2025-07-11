@@ -1,0 +1,8 @@
+"delay.obj",
+"keyboard.obj",
+"smg.obj",
+"iic.obj",
+"ls138.obj",
+"main.obj" 
+TO "12" 
+RAMSIZE(256) 
