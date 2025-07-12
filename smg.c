@@ -46,3 +46,16 @@ void addDot(unsigned char index) {
         }
     }
 }
+
+void clearLed() {
+    updateLed(0, 11);
+    updateLed(1, 11);
+    updateLed(2, 11);
+    updateLed(3, 11);
+    updateLed(4, 11);
+    updateLed(5, 11);
+    updateLed(6, 11);
+    updateLed(7, 11);
+
+    showLed();
+}

@@ -9,5 +9,6 @@ extern unsigned char zixing[]; // 数码管字形码数组
 void showLed();
 void updateLed(unsigned char index, unsigned char digit);//��λ�ô���ʾ����
 void addDot(unsigned char index); 
+void clearLed();
 
 #endif

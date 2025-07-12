@@ -1,4 +1,4 @@
-C51 COMPILER V9.56.0.0   DS1302                                                            07/12/2025 19:44:49 PAGE 1   
+C51 COMPILER V9.56.0.0   DS1302                                                            07/12/2025 21:26:10 PAGE 1   
 
 
 C51 COMPILER V9.56.0.0, COMPILATION OF MODULE DS1302
@@ -62,7 +62,7 @@ line level    source
   52   1          //     } else {
   53   1          //         DAT_CLR;
   54   1          //     }
-C51 COMPILER V9.56.0.0   DS1302                                                            07/12/2025 19:44:49 PAGE 2   
+C51 COMPILER V9.56.0.0   DS1302                                                            07/12/2025 21:26:10 PAGE 2   
 
   55   1          //     dat >>= 1;
   56   1          //     SCK_SET;
@@ -126,7 +126,7 @@ line level    source
  114          void Ds1302_Init(void) {
  115   1          RST_CLR;
  116   1          SCK_CLR;
-C51 COMPILER V9.56.0.0   DS1302                                                            07/12/2025 19:44:49 PAGE 3   
+C51 COMPILER V9.56.0.0   DS1302                                                            07/12/2025 21:26:10 PAGE 3   
 
  117   1      
  118   1          // 首先解除写保护
@@ -148,24 +148,35 @@ line level    source
  134   1          
  135   1      }
  136          
- 137          void Ds1302_Read_Time(void) {
- 138   1          unsigned char i, temp;
+ 137          void Ds1302_Write_Time(void) {
+ 138   1          unsigned char i;
  139   1          
- 140   1          for (i = 0; i < 7; i++) {
- 141   2              TIME[i] = Ds1302_Read_Byte(READ_RTC_ADDR[i]);
- 142   2          }
- 143   1      
- 144   1          for (i = 0; i < 7; i++) {
- 145   2              temp = TIME[i] / 16;
- 146   2              cur_time_buf[i] = TIME[i] % 16;
- 147   2              cur_time_buf[i] += temp * 10; // 转换BCD码
- 148   2          }
- 149   1      }
- 150          
+ 140   1          Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
+ 141   1          for (i = 0; i < 7; i++) {
+ 142   2              Ds1302_Write_Byte(WRITE_RTC_ADDR[i], cur_time_buf[i]);
+ 143   2          }
+ 144   1          Ds1302_Write_Byte(0x8e, 0x80); // 允许写保护
+ 145   1          
+ 146   1      }
+ 147          
+ 148          void Ds1302_Read_Time(void) {
+ 149   1          unsigned char i, temp;
+ 150   1          
+ 151   1          for (i = 0; i < 7; i++) {
+ 152   2              TIME[i] = Ds1302_Read_Byte(READ_RTC_ADDR[i]);
+ 153   2          }
+ 154   1      
+ 155   1          for (i = 0; i < 7; i++) {
+ 156   2              temp = TIME[i] / 16;
+ 157   2              cur_time_buf[i] = TIME[i] % 16;
+ 158   2              cur_time_buf[i] += temp * 10; // 转换BCD码
+ 159   2          }
+ 160   1      }
+ 161          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    274    ----
+   CODE SIZE        =    301    ----
    CONSTANT SIZE    =     14    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

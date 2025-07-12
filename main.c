@@ -54,7 +54,7 @@ void serviceTimer0() interrupt 1{
 
 }
 	
-unsigned char second, minute, hour;
+unsigned char second, minute, hour, key;
 void main()	{
 
 	// // 初始化定时器
@@ -81,48 +81,42 @@ void main()	{
 	Ds1302_Init_Time(); 
 	Ds1302_Write_Byte(0x8e, 0x80); // 启用写保护
 	
-	
+	clearLed(); 
 
 	
 	while (1) {
-		// 读取当前时间
-		Ds1302_Read_Time();
+		key = readKey(); // 扫描按键
+
+		if (key == 7) {
+			while (1) {
+				// 读取当前时间
+				Ds1302_Read_Time();
+				
+				// 显示时-分-秒 格式
+				updateLed(0, cur_time_buf[2] / 10);  // 时的十位
+				updateLed(1, cur_time_buf[2] % 10);  // 时的个位
+				updateLed(2, 11);                    // 分隔符 "-"
+				updateLed(3, cur_time_buf[1] / 10);  // 分的十位
+				updateLed(4, cur_time_buf[1] % 10);  // 分的个位
+				updateLed(5, 11);                    // 分隔符 "-"
+				updateLed(6, cur_time_buf[0] / 10);  // 秒的十位
+				updateLed(7, cur_time_buf[0] % 10);  // 秒的个位
+
+				showLed();
+				
+				// 添加延时，避免读取过于频繁
+				delayMs(1);
+				key = readKey();
+
+				if (key == 7) {
+					clearLed();
+					break;
+				}
+			}
 		
-		// 显示时-分-秒 格式
-		updateLed(0, cur_time_buf[2] / 10);  // 时的十位
-		updateLed(1, cur_time_buf[2] % 10);  // 时的个位
-		updateLed(2, 11);                    // 分隔符 "-"
-		updateLed(3, cur_time_buf[1] / 10);  // 分的十位
-		updateLed(4, cur_time_buf[1] % 10);  // 分的个位
-		updateLed(5, 11);                    // 分隔符 "-"
-		updateLed(6, cur_time_buf[0] / 10);  // 秒的十位
-		updateLed(7, cur_time_buf[0] % 10);  // 秒的个位
 
-		// second = Ds1302_Read_Byte(0x81);
-		// minute = Ds1302_Read_Byte(0x83);
-		// hour = Ds1302_Read_Byte(0x85);
+		}
 		
-		// second = second / 16 * 10 + second % 16; 
-		// minute = minute / 16 * 10 + minute % 16;
-		// hour = hour / 16 * 10 + hour % 16;
-        
-		// updateLed(0, hour / 10);        // 时的十位
-		// updateLed(1, hour % 10);        // 时的个位
-		// updateLed(2, 11);               // 分隔符 "-"
-		// updateLed(3, minute / 10);      // 分的十位
-		// updateLed(4, minute % 10);      // 分的个位
-		// updateLed(5, 11);               // 分隔符 "-"
-        // updateLed(6, second / 10);  // 秒的十位
-        // updateLed(7, second % 10);  // 秒的个位
-
-
-		// updateLed(0, 2);
-		// updateLed(1, 2);
-
-		showLed();
-		
-		// 添加延时，避免读取过于频繁
-		delayMs(1);
 	}
 	
 }

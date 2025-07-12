@@ -26,12 +26,10 @@ Project File Date:  07/11/2025
 
 <h2>Output:</h2>
 Build target 'Target 1'
+compiling smg.c...
 compiling main.c...
 main.c(81): warning C206: 'Ds1302_Init_Time': missing function-prototype
-compiling ds1302.c...
 linking...
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?READKEY?KEYBOARD
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_ADDDOT?SMG
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
@@ -46,10 +44,12 @@ linking...
     SEGMENT: ?PR?INIT_SMGLED?MAIN
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?UPDATESMG?MAIN
-Program Size: data=73.0 xdata=0 code=1494
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DS1302_WRITE_TIME?DS1302
+Program Size: data=74.0 xdata=0 code=1573
 creating hex file from "12"...
 "12" - 0 Error(s), 9 Warning(s).
-Build Time Elapsed:  00:00:00
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>
