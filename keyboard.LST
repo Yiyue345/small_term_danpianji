@@ -1,4 +1,4 @@
-C51 COMPILER V9.56.0.0   KEYBOARD                                                          07/11/2025 16:27:23 PAGE 1   
+C51 COMPILER V9.56.0.0   KEYBOARD                                                          07/12/2025 17:44:55 PAGE 1   
 
 
 C51 COMPILER V9.56.0.0, COMPILATION OF MODULE KEYBOARD
@@ -62,7 +62,7 @@ line level    source
   53   2          if(KEY==0XDB)   return 13; //1101 1011   
   54   2          if(KEY==0XEB)   return 17; //1110 1011
   55   2        }
-C51 COMPILER V9.56.0.0   KEYBOARD                                                          07/11/2025 16:27:23 PAGE 2   
+C51 COMPILER V9.56.0.0   KEYBOARD                                                          07/12/2025 17:44:55 PAGE 2   
 
   56   1      
   57   1        //扫描P1.3所在的行

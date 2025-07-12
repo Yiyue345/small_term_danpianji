@@ -13,19 +13,8 @@ sbit  DP=P2^2;
 sbit L1 = P0^0;
 sbit L8 = P0^7;
 
-//�ӳٺ���   	   
 
-void delay(unsigned int m)			 
-{
-	
-unsigned int i,j;
-for(i=0;i<m;i++)
-	
-{
-   for(j=0;j<121;j++){}      
-}
-}
-//��ʱ��T0
+// 定时器T0初始化
 void InitTimer0()
 {
 	TMOD = 0x01;
@@ -37,69 +26,7 @@ void InitTimer0()
 	TR0 = 1;
 }
 
-// DS1302 ָ��д��
-void WriteCommand(unsigned char Command)
-{
-unsigned char i;
-RST=0;
-CLK=0;
-RST=1;
-for(i=8;i>0;i--)
-     {
-	  DP=Command&0x01;
-	  CLK=1;
-	  Command>>=1;
-	 }
-}
-
-
-//DS1302 ����д��
-void WriteData(unsigned char SendDat)
-{
-unsigned char i;
-for(i=8;i>0;i--)
-     {
-	  DP=SendDat&0x01;
-	  CLK=1;
-	  SendDat>>=1;
-	 }
-}
-
-
-//DS1302 ��ȡ����
-unsigned char ReadData()
-{
-	unsigned char i,RecDat=0;
-	for(i=0;i<8;i++)
-     {
-	  CLK=1;
-	  CLK=0;
-	  if(DP)RecDat|=0x01<<i;
-	 }
-	 return(RecDat);
-}			
-
-//DS1302���ֽ�����д��Ͷ�ȡ
-void WriteByte(unsigned char Command,unsigned char SendDat)
-{
-	WriteCommand(Command);
-	WriteData(SendDat);
-	RST=0;
-}
-unsigned char ReadByte(unsigned char Command)
-{
-	unsigned char RecDat=0;
-	WriteCommand(Command);
-	RecDat=ReadData();
-	RST=0;
-	return(RecDat);
-}
-
-
-//��ʾLED 
-
 void Init_smgled(){
-
 
 }
 
@@ -108,7 +35,7 @@ void updatesmg(){
  
 }
 
-//�жϷ������
+// 定时器T0中断服务函数
 unsigned char count = 0;
 void serviceTimer0() interrupt 1{
 	TH0 = (65535 - 50000) / 256;
@@ -127,28 +54,41 @@ void serviceTimer0() interrupt 1{
 
 }
 	
-//��main�����������Ŀ�߼�����
+unsigned char second, minute, hour;
 void main()	{
-	// 初始化定时器
-	InitTimer0();
+
+	// // 初始化定时器
+	// InitTimer0();
 	
-	// 初始化DS1302
+	// // 初始化DS1302
+	// Ds1302_Init();
+	
+	// // 延时一下让DS1302稳定
+	// delay(100);
+	
+	// // 写入默认时间
+	// Ds1302_Write_Time(); 
+	
+	// // 再次延时
+	// delay(100);
+
+	SelectHC573(1);
 	Ds1302_Init();
-	
-	// 延时一下让DS1302稳定
-	delay(100);
-	
+
+	Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
+	// Ds1302_Write_Byte(0x80, 0x00); // 使能写操作
 	// 写入默认时间
-	Ds1302_Write_Time(); 
+	Ds1302_Init_Time(); 
+	Ds1302_Write_Byte(0x8e, 0x80); // 启用写保护
 	
-	// 再次延时
-	delay(100);
+	
+
 	
 	while (1) {
 		// 读取当前时间
 		Ds1302_Read_Time();
 		
-		// 显示时:分:秒 格式
+		// 显示时-分-秒 格式
 		updateLed(0, cur_time_buf[2] / 10);  // 时的十位
 		updateLed(1, cur_time_buf[2] % 10);  // 时的个位
 		updateLed(2, 11);                    // 分隔符 "-"
@@ -158,10 +98,31 @@ void main()	{
 		updateLed(6, cur_time_buf[0] / 10);  // 秒的十位
 		updateLed(7, cur_time_buf[0] % 10);  // 秒的个位
 
+		// second = Ds1302_Read_Byte(0x81);
+		// minute = Ds1302_Read_Byte(0x83);
+		// hour = Ds1302_Read_Byte(0x85);
+		
+		// second = second / 16 * 10 + second % 16; 
+		// minute = minute / 16 * 10 + minute % 16;
+		// hour = hour / 16 * 10 + hour % 16;
+        
+		// updateLed(0, hour / 10);        // 时的十位
+		// updateLed(1, hour % 10);        // 时的个位
+		// updateLed(2, 11);               // 分隔符 "-"
+		// updateLed(3, minute / 10);      // 分的十位
+		// updateLed(4, minute % 10);      // 分的个位
+		// updateLed(5, 11);               // 分隔符 "-"
+        // updateLed(6, second / 10);  // 秒的十位
+        // updateLed(7, second % 10);  // 秒的个位
+
+
+		// updateLed(0, 2);
+		// updateLed(1, 2);
+
 		showLed();
 		
 		// 添加延时，避免读取过于频繁
-		delay(10);
+		delayMs(1);
 	}
 	
 }

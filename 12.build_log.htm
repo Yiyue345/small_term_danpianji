@@ -22,11 +22,12 @@ Dialog DLL:      TP51.DLL V2.59.0.0
  
 <h2>Project:</h2>
 E:\学习相关\智能电压监控系统 - 给学生\智能电压监控系统 - 给学生\项目初始化包\智能电压监控系统\智能电压监控系统.uvproj
-Project File Date:  08/28/2020
+Project File Date:  07/11/2025
 
 <h2>Output:</h2>
 Build target 'Target 1'
 compiling main.c...
+main.c(81): warning C206: 'Ds1302_Init_Time': missing function-prototype
 compiling ds1302.c...
 linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
@@ -40,14 +41,12 @@ linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_READ_PCF8591?IIC
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_WRITEBYTE?MAIN
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_READBYTE?MAIN
+    SEGMENT: ?PR?INITTIMER0?MAIN
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?INIT_SMGLED?MAIN
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?UPDATESMG?MAIN
-Program Size: data=70.0 xdata=0 code=1570
+Program Size: data=73.0 xdata=0 code=1494
 creating hex file from "12"...
 "12" - 0 Error(s), 9 Warning(s).
 Build Time Elapsed:  00:00:00
