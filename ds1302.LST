@@ -1,4 +1,4 @@
-C51 COMPILER V9.56.0.0   DS1302                                                            07/13/2025 23:25:48 PAGE 1   
+C51 COMPILER V9.56.0.0   DS1302                                                            07/14/2025 00:05:14 PAGE 1   
 
 
 C51 COMPILER V9.56.0.0, COMPILATION OF MODULE DS1302
@@ -13,170 +13,172 @@ line level    source
    4          unsigned char code READ_RTC_ADDR[7] = {0x81, 0x83, 0x85, 0x87, 0x89, 0x8b, 0x8d}; // RTC读地址
    5          unsigned char code WRITE_RTC_ADDR[7] = {0x80, 0x82, 0x84, 0x86, 0x88, 0x8a, 0x8c}; // RTC写地址
    6          // 修改默认时间为BCD格式：23时59分55秒，07日，07月，21年，星期6
-   7          unsigned char TIME[7] = {0x55, 0x59, 0x23, 0x07, 0x07, 0x06, 0x21}; // 秒，分，时，日，月，年�
-             -�星期
-   8          unsigned char cur_time_buf[7]; // 存储转换后的十进制时间
-   9          
-  10          // DS1302底层通信函数
-  11          void Ds1302_Write_Byte(unsigned char addr, unsigned char dat) {
-  12   1          unsigned char i;
-  13   1          
-  14   1          RST_SET; // 启动传输
-  15   1      
-  16   1          for (i = 0; i < 8; i++) {
-  17   2              DS1302_DAT = addr & (0x01 << i);
-  18   2              SCK_SET;
-  19   2              SCK_CLR;
-  20   2          }
-  21   1      
-  22   1          for (i = 0; i < 8; i++) {
-  23   2              DS1302_DAT = dat & (0x01 << i);
-  24   2              SCK_SET;
-  25   2              SCK_CLR;
-  26   2          }
-  27   1      
-  28   1          RST_CLR; // 结束传输
-  29   1      
-  30   1          // DS1302_DAT = addr & 0x01; // 设置数据线为地址最低位
-  31   1          
-  32   1          // SCK_SET;
-  33   1          // SCK_CLR;
-  34   1      
-  35   1          // 发送地址字节
-  36   1          // for (i = 0; i < 8; i++) {
-  37   1          //     SCK_CLR;
-  38   1          //     if (addr & 0x01) {
-  39   1          //         DAT_SET;
-  40   1          //     } else {
-  41   1          //         DAT_CLR;
-  42   1          //     }
-  43   1          //     addr >>= 1;
-  44   1          //     SCK_SET;
-  45   1          // }
-  46   1          
-  47   1          // // 发送数据字节
-  48   1          // for (i = 0; i < 8; i++) {
-  49   1          //     SCK_CLR;
-  50   1          //     if (dat & 0x01) {
-  51   1          //         DAT_SET;
-  52   1          //     } else {
-  53   1          //         DAT_CLR;
-  54   1          //     }
-C51 COMPILER V9.56.0.0   DS1302                                                            07/13/2025 23:25:48 PAGE 2   
+   7          unsigned char TIME[7] = {0x55, 0x59, 0x23, 0x07, 0x07, 0x06, 0x21}; 
+   8          // 秒，分，时，日，月，年，星期
+   9          unsigned char cur_time_buf[7]; // 存储转换后的十进制时间
+  10          
+  11          // DS1302底层通信函数
+  12          void Ds1302_Write_Byte(unsigned char addr, unsigned char dat) {
+  13   1          unsigned char i;
+  14   1          
+  15   1          RST_SET; // 启动传输
+  16   1      
+  17   1          for (i = 0; i < 8; i++) {
+  18   2              DS1302_DAT = addr & (0x01 << i);
+  19   2              SCK_SET;
+  20   2              SCK_CLR;
+  21   2          }
+  22   1      
+  23   1          for (i = 0; i < 8; i++) {
+  24   2              DS1302_DAT = dat & (0x01 << i);
+  25   2              SCK_SET;
+  26   2              SCK_CLR;
+  27   2          }
+  28   1      
+  29   1          RST_CLR; // 结束传输
+  30   1      
+  31   1          // DS1302_DAT = addr & 0x01; // 设置数据线为地址最低位
+  32   1          
+  33   1          // SCK_SET;
+  34   1          // SCK_CLR;
+  35   1      
+  36   1          // 发送地址字节
+  37   1          // for (i = 0; i < 8; i++) {
+  38   1          //     SCK_CLR;
+  39   1          //     if (addr & 0x01) {
+  40   1          //         DAT_SET;
+  41   1          //     } else {
+  42   1          //         DAT_CLR;
+  43   1          //     }
+  44   1          //     addr >>= 1;
+  45   1          //     SCK_SET;
+  46   1          // }
+  47   1          
+  48   1          // // 发送数据字节
+  49   1          // for (i = 0; i < 8; i++) {
+  50   1          //     SCK_CLR;
+  51   1          //     if (dat & 0x01) {
+  52   1          //         DAT_SET;
+  53   1          //     } else {
+  54   1          //         DAT_CLR;
+  55   1          //     }
+C51 COMPILER V9.56.0.0   DS1302                                                            07/14/2025 00:05:14 PAGE 2   
 
-  55   1          //     dat >>= 1;
-  56   1          //     SCK_SET;
-  57   1          // }
-  58   1          
-  59   1      }
-  60          // 111
-  61          unsigned char Ds1302_Read_Byte(unsigned char addr) {
-  62   1          unsigned char i, dat = 0x00;
-  63   1          RST_CLR; // 复位DS1302
-  64   1          SCK_CLR;
-  65   1      
-  66   1          RST_SET; // 启动传输
-  67   1          for (i = 0; i < 8; i++) {
-  68   2              DS1302_DAT = addr & (0x01 << i);
-  69   2              SCK_SET;
-  70   2              SCK_CLR;
-  71   2          }
-  72   1         
-  73   1          for (i = 0; i < 8; i++) {
-  74   2              
-  75   2              if (DS1302_DAT) {
-  76   3                  dat |= (0x01 << i);
-  77   3              }
-  78   2              SCK_SET;
-  79   2              SCK_CLR; 
-  80   2      
-  81   2         }
-  82   1          DAT_CLR;
-  83   1          RST_CLR;
-  84   1          return dat;
-  85   1          
-  86   1          // // 发送地址字节
-  87   1          // for (i = 0; i < 8; i++) {
-  88   1          //     SCK_CLR;
-  89   1          //     if (addr & 0x01) {
-  90   1          //         DAT_SET;
-  91   1          //     } else {
-  92   1          //         DAT_CLR;
-  93   1          //     }
-  94   1          //     addr >>= 1;
-  95   1          //     SCK_SET;
-  96   1          // }
-  97   1          
-  98   1          // // 读取数据字节前，需要将数据线设置为输入
-  99   1          // // 读取数据字节
- 100   1          // for (i = 0; i < 8; i++) {
- 101   1          //     SCK_CLR;
- 102   1          //     SCK_SET;
- 103   1          //     if (DS1302_DAT) {
- 104   1          //         dat |= (0x01 << i);
- 105   1          //     }
- 106   1          // }
- 107   1          
- 108   1          // RST_CLR; // 结束传输
- 109   1          // SCK_CLR; // 确保时钟线为低
- 110   1      
- 111   1          
- 112   1      }
- 113          
- 114          void Ds1302_Init(void) {
- 115   1          RST_CLR;
- 116   1          SCK_CLR;
-C51 COMPILER V9.56.0.0   DS1302                                                            07/13/2025 23:25:48 PAGE 3   
+  56   1          //     dat >>= 1;
+  57   1          //     SCK_SET;
+  58   1          // }
+  59   1          
+  60   1      }
+  61          // 111
+  62          unsigned char Ds1302_Read_Byte(unsigned char addr) {
+  63   1          unsigned char i, dat = 0x00;
+  64   1          RST_CLR; // 复位DS1302
+  65   1          SCK_CLR;
+  66   1      
+  67   1          RST_SET; // 启动传输
+  68   1          for (i = 0; i < 8; i++) {
+  69   2              DS1302_DAT = addr & (0x01 << i);
+  70   2              SCK_SET;
+  71   2              SCK_CLR;
+  72   2          }
+  73   1         
+  74   1          for (i = 0; i < 8; i++) {
+  75   2              
+  76   2              if (DS1302_DAT) {
+  77   3                  dat |= (0x01 << i);
+  78   3              }
+  79   2              SCK_SET;
+  80   2              SCK_CLR; 
+  81   2      
+  82   2         }
+  83   1          DAT_CLR;
+  84   1          RST_CLR;
+  85   1          return dat;
+  86   1          
+  87   1          // // 发送地址字节
+  88   1          // for (i = 0; i < 8; i++) {
+  89   1          //     SCK_CLR;
+  90   1          //     if (addr & 0x01) {
+  91   1          //         DAT_SET;
+  92   1          //     } else {
+  93   1          //         DAT_CLR;
+  94   1          //     }
+  95   1          //     addr >>= 1;
+  96   1          //     SCK_SET;
+  97   1          // }
+  98   1          
+  99   1          // // 读取数据字节前，需要将数据线设置为输入
+ 100   1          // // 读取数据字节
+ 101   1          // for (i = 0; i < 8; i++) {
+ 102   1          //     SCK_CLR;
+ 103   1          //     SCK_SET;
+ 104   1          //     if (DS1302_DAT) {
+ 105   1          //         dat |= (0x01 << i);
+ 106   1          //     }
+ 107   1          // }
+ 108   1          
+ 109   1          // RST_CLR; // 结束传输
+ 110   1          // SCK_CLR; // 确保时钟线为低
+ 111   1      
+ 112   1          
+ 113   1      }
+ 114          
+ 115          void Ds1302_Init(void) {
+ 116   1          RST_CLR;
+ 117   1          SCK_CLR;
+C51 COMPILER V9.56.0.0   DS1302                                                            07/14/2025 00:05:14 PAGE 3   
 
- 117   1      
- 118   1          // 首先解除写保护
- 119   1          Ds1302_Write_Byte(0x8e, 0x00);
- 120   1          // 启动时钟（清除秒寄存器的CH位）
- 121   1          // Ds1302_Write_Byte(Ds1302_sec_add, 0x00);
- 122   1          // 重新启用写保护
- 123   1          Ds1302_Write_Byte(0x8e, 0x80);
- 124   1      }
- 125          
- 126          void Ds1302_Init_Time(void) {
- 127   1          unsigned char i;
- 128   1          
- 129   1          Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
- 130   1          for (i = 0; i < 7; i++) {
- 131   2              Ds1302_Write_Byte(WRITE_RTC_ADDR[i], TIME[i]);
- 132   2          }
- 133   1          Ds1302_Write_Byte(0x8e, 0x80); // 允许写保护
- 134   1          
- 135   1      }
- 136          
- 137          void Ds1302_Write_Time(void) {
- 138   1          unsigned char i;
- 139   1          
- 140   1          Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
- 141   1          for (i = 0; i < 7; i++) {
- 142   2              Ds1302_Write_Byte(WRITE_RTC_ADDR[i], cur_time_buf[i]);
- 143   2          }
- 144   1          Ds1302_Write_Byte(0x8e, 0x80); // 允许写保护
- 145   1          
- 146   1      }
- 147          
- 148          void Ds1302_Read_Time(void) {
- 149   1          unsigned char i, temp;
- 150   1          
- 151   1          for (i = 0; i < 7; i++) {
- 152   2              TIME[i] = Ds1302_Read_Byte(READ_RTC_ADDR[i]);
- 153   2          }
- 154   1      
- 155   1          for (i = 0; i < 7; i++) {
- 156   2              temp = TIME[i] / 16;
- 157   2              cur_time_buf[i] = TIME[i] % 16;
- 158   2              cur_time_buf[i] += temp * 10; // 转换BCD码
- 159   2          }
- 160   1      }
- 161          
+ 118   1      
+ 119   1          // 首先解除写保护
+ 120   1          Ds1302_Write_Byte(0x8e, 0x00);
+ 121   1          // 启动时钟（清除秒寄存器的CH位）
+ 122   1          // Ds1302_Write_Byte(Ds1302_sec_add, 0x00);
+ 123   1          // 重新启用写保护
+ 124   1          Ds1302_Write_Byte(0x8e, 0x80);
+ 125   1      }
+ 126          
+ 127          void Ds1302_Init_Time(void) {
+ 128   1          unsigned char i;
+ 129   1          
+ 130   1          Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
+ 131   1          for (i = 0; i < 7; i++) {
+ 132   2              Ds1302_Write_Byte(WRITE_RTC_ADDR[i], TIME[i]);
+ 133   2          }
+ 134   1          Ds1302_Write_Byte(0x8e, 0x80); // 允许写保护
+ 135   1          
+ 136   1      }
+ 137          
+ 138          void Ds1302_Write_Time(void) {
+ 139   1          unsigned char i;
+ 140   1          
+ 141   1          Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
+ 142   1          for (i = 0; i < 7; i++) {
+ 143   2              // 正确的十进制到BCD码转换
+ 144   2              TIME[i] = (cur_time_buf[i] / 10) * 16 + (cur_time_buf[i] % 10);
+ 145   2              Ds1302_Write_Byte(WRITE_RTC_ADDR[i], TIME[i]);
+ 146   2          }
+ 147   1          Ds1302_Write_Byte(0x8e, 0x80); // 允许写保护
+ 148   1          
+ 149   1      }
+ 150          
+ 151          void Ds1302_Read_Time(void) {
+ 152   1          unsigned char i, temp;
+ 153   1          
+ 154   1          for (i = 0; i < 7; i++) {
+ 155   2              TIME[i] = Ds1302_Read_Byte(READ_RTC_ADDR[i]);
+ 156   2          }
+ 157   1      
+ 158   1          for (i = 0; i < 7; i++) {
+ 159   2              temp = TIME[i] / 16;
+ 160   2              cur_time_buf[i] = TIME[i] % 16;
+ 161   2              cur_time_buf[i] += temp * 10; // 转换BCD码
+ 162   2          }
+ 163   1      }
+ 164          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    301    ----
+   CODE SIZE        =    326    ----
    CONSTANT SIZE    =     14    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

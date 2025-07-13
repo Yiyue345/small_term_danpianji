@@ -4,7 +4,8 @@
 unsigned char code READ_RTC_ADDR[7] = {0x81, 0x83, 0x85, 0x87, 0x89, 0x8b, 0x8d}; // RTC读地址
 unsigned char code WRITE_RTC_ADDR[7] = {0x80, 0x82, 0x84, 0x86, 0x88, 0x8a, 0x8c}; // RTC写地址
 // 修改默认时间为BCD格式：23时59分55秒，07日，07月，21年，星期6
-unsigned char TIME[7] = {0x55, 0x59, 0x23, 0x07, 0x07, 0x06, 0x21}; // 秒，分，时，日，月，年，星期
+unsigned char TIME[7] = {0x55, 0x59, 0x23, 0x07, 0x07, 0x06, 0x21}; 
+// 秒，分，时，日，月，年，星期
 unsigned char cur_time_buf[7]; // 存储转换后的十进制时间
 
 // DS1302底层通信函数
@@ -139,7 +140,9 @@ void Ds1302_Write_Time(void) {
     
     Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
     for (i = 0; i < 7; i++) {
-        Ds1302_Write_Byte(WRITE_RTC_ADDR[i], cur_time_buf[i]);
+        // 正确的十进制到BCD码转换
+        TIME[i] = (cur_time_buf[i] / 10) * 16 + (cur_time_buf[i] % 10);
+        Ds1302_Write_Byte(WRITE_RTC_ADDR[i], TIME[i]);
     }
     Ds1302_Write_Byte(0x8e, 0x80); // 允许写保护
     

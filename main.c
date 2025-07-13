@@ -141,14 +141,62 @@ void main()	{
 							clearLed();
 							timerMode = 0;
 							choose = 0;
+							Ds1302_Write_Time();
 							break;
 						} 
 						else if (key == 4) {
 							choose++;
 							choose %= 3;
 						}
+						else if (key == 11) {
+							// 进入设置秒
+							if (choose == 2) {
+								cur_time_buf[0]++;
+								if (cur_time_buf[0] >= 60) {
+									cur_time_buf[0] = 0;
+								}
+							} 
+							// 进入设置分
+							else if (choose == 1) {
+								cur_time_buf[1]++;
+								if (cur_time_buf[1] >= 60) {
+									cur_time_buf[1] = 0;
+								}
+							} 
+							// 进入设置时
+							else if (choose == 0) {
+								cur_time_buf[2]++;
+								if (cur_time_buf[2] >= 24) {
+									cur_time_buf[2] = 0;
+								}
+							}
+						}
+
+						else if (key == 10) {
+							// 进入设置秒
+							if (choose == 2) {
+								cur_time_buf[0]--;
+								if (cur_time_buf[0] < 0) {
+									cur_time_buf[0] = 59;
+								}
+							} 
+							// 进入设置分
+							else if (choose == 1) {
+								cur_time_buf[1]--;
+								if (cur_time_buf[1] < 0) {
+									cur_time_buf[1] = 59;
+								}
+							} 
+							// 进入设置时
+							else if (choose == 0) {
+								cur_time_buf[2]--;
+								if (cur_time_buf[2] < 0) {
+									cur_time_buf[2] = 23;
+								}
+							}
+						}
 						
-						// 添加小延时，避免按键检测过于频繁
+						showLed();
 					}
 				}
 			}

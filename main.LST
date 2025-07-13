@@ -1,4 +1,4 @@
-C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:25:48 PAGE 1   
+C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:57:08 PAGE 1   
 
 
 C51 COMPILER V9.56.0.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   53   3            if (choose == 0) {
   54   4              updateLed(0, 10);  // 10 对应空白
   55   4              updateLed(1, 10);
-C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:25:48 PAGE 2   
+C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:57:08 PAGE 2   
 
   56   4            }
   57   3            else if (choose == 1) {
@@ -126,7 +126,7 @@ line level    source
  114   4              Ds1302_Read_Time();
  115   4              
  116   4              // 显示时-分-秒 格式
-C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:25:48 PAGE 3   
+C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:57:08 PAGE 3   
 
  117   4              syncBufTime(); // 显示当前时间
  118   4              showLed(); 
@@ -155,28 +155,78 @@ line level    source
  141   7                    clearLed();
  142   7                    timerMode = 0;
  143   7                    choose = 0;
- 144   7                    break;
- 145   7                  } 
- 146   6                  else if (key == 4) {
- 147   7                    choose++;
- 148   7                    choose %= 3;
- 149   7                  }
- 150   6                  
- 151   6                  // 添加小延时，避免按键检测过于频繁
- 152   6                }
- 153   5              }
- 154   4            }
- 155   3          
- 156   3      
- 157   3          }
- 158   2          
- 159   2        }
- 160   1        
- 161   1      }
+ 144   7                    Ds1302_Write_Time();
+ 145   7                    break;
+ 146   7                  } 
+ 147   6                  else if (key == 4) {
+ 148   7                    choose++;
+ 149   7                    choose %= 3;
+ 150   7                  }
+ 151   6                  else if (key == 11) {
+ 152   7                    // 进入设置秒
+ 153   7                    if (choose == 2) {
+ 154   8                      cur_time_buf[0]++;
+ 155   8                      if (cur_time_buf[0] >= 60) {
+ 156   9                        cur_time_buf[0] = 0;
+ 157   9                      }
+ 158   8                    } 
+ 159   7                    // 进入设置分
+ 160   7                    else if (choose == 1) {
+ 161   8                      cur_time_buf[1]++;
+ 162   8                      if (cur_time_buf[1] >= 60) {
+ 163   9                        cur_time_buf[1] = 0;
+ 164   9                      }
+ 165   8                    } 
+ 166   7                    // 进入设置时
+ 167   7                    else if (choose == 0) {
+ 168   8                      cur_time_buf[2]++;
+ 169   8                      if (cur_time_buf[2] >= 24) {
+ 170   9                        cur_time_buf[2] = 0;
+ 171   9                      }
+ 172   8                    }
+ 173   7                  }
+ 174   6      
+ 175   6                  else if (key == 10) {
+ 176   7                    // 进入设置秒
+ 177   7                    if (choose == 2) {
+ 178   8                      cur_time_buf[0]--;
+C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:57:08 PAGE 4   
+
+ 179   8                      if (cur_time_buf[0] < 0) {
+ 180   9                        cur_time_buf[0] = 59;
+ 181   9                      }
+ 182   8                    } 
+ 183   7                    // 进入设置分
+ 184   7                    else if (choose == 1) {
+ 185   8                      cur_time_buf[1]--;
+ 186   8                      if (cur_time_buf[1] < 0) {
+ 187   9                        cur_time_buf[1] = 59;
+ 188   9                      }
+ 189   8                    } 
+ 190   7                    // 进入设置时
+ 191   7                    else if (choose == 0) {
+ 192   8                      cur_time_buf[2]--;
+ 193   8                      if (cur_time_buf[2] < 0) {
+ 194   9                        cur_time_buf[2] = 23;
+ 195   9                      }
+ 196   8                    }
+ 197   7                  }
+ 198   6                  
+ 199   6                  showLed();
+ 200   6                }
+ 201   5              }
+ 202   4            }
+ 203   3          
+ 204   3      
+ 205   3          }
+ 206   2          
+ 207   2        }
+ 208   1        
+ 209   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    300    ----
+   CODE SIZE        =    431    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
