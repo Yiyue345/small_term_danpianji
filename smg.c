@@ -1,6 +1,7 @@
 #include "reg52.h"
 #include "smg.h"
 #include "delay.h"
+#include "ds1302.h"
 // 共阴极数码管字形码
 // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 灭, -, .
 unsigned char zixing[] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f, 0x00, 0x40, 0x80};
@@ -58,4 +59,18 @@ void clearLed() {
     updateLed(7, 11);
 
     showLed();
+}
+
+void syncBufTime() {
+    // 显示当前时间缓冲区中的时间
+    updateLed(0, cur_time_buf[2] / 10);  // 时的十位
+    updateLed(1, cur_time_buf[2] % 10);  // 时的个位
+    updateLed(2, 11);                    // 分隔符 "-"
+    updateLed(3, cur_time_buf[1] / 10);  // 分的十位
+    updateLed(4, cur_time_buf[1] % 10);  // 分的个位
+    updateLed(5, 11);                    // 分隔符 "-"
+    updateLed(6, cur_time_buf[0] / 10);  // 秒的十位
+    updateLed(7, cur_time_buf[0] % 10);  // 秒的个位
+
+    // showLed();
 }
