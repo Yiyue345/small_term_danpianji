@@ -2,9 +2,9 @@
 #include "ls138.h"
 #include "smg.h"
 #include "delay.h"
-#include "iic.h"
 #include "keyboard.h"
 #include "ds1302.h"
+#include "I2C.h"
 
 sbit  RST=P2^4;				  
 sbit  CLK=P2^3;				   
@@ -14,6 +14,9 @@ sbit L1 = P0^0;
 sbit L8 = P0^7;
 
 unsigned char second, minute, hour, key, choose = 0, flag = 0, timerMode = 0;
+unsigned int v = 0;
+sbit I2C_SCL=P2^1;
+sbit I2C_SDA=P2^0;
 // 定时器T0初始化
 void InitTimer0()
 {
@@ -78,6 +81,9 @@ void serviceTimer0() interrupt 1{
 
 void main()	{
 
+	I2C_SCL = 1;
+	I2C_SDA = 1;
+	v = PCF_ReadIN0();
 	// 初始化定时器
 	InitTimer0();
 	
@@ -104,7 +110,6 @@ void main()	{
 	
 	clearLed(); 
 
-	
 	while (1) {
 		key = readKey(); // 扫描按键
 
@@ -202,6 +207,32 @@ void main()	{
 			}
 		
 
+		}
+		else if (key == 6) {
+			clearLed();
+			while (1) {
+				ET0 = 0; // 关闭定时器中断
+				v = PCF_ReadIN0();
+				ET0 = 1; // 重新开启定时器中断
+
+				updateLed(0, 11);
+				updateLed(1, 1);
+				updateLed(2, 11);
+				updateLed(3, 10);
+
+				updateLed(4, v / 1000);
+				updateLed(5, (v % 1000) / 100);
+				updateLed(6, (v % 100) / 10);
+				updateLed(7, v % 10);
+
+				showLed();
+
+				key = readKey();
+				if (key == 7) {
+					clearLed();
+					break;
+				}
+			}
 		}
 		
 	}

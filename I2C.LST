@@ -1,0 +1,215 @@
+C51 COMPILER V9.56.0.0   I2C                                                               07/20/2025 14:37:58 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE I2C
+OBJECT MODULE PLACED IN I2C.OBJ
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE I2C.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include "I2C.h"
+   3          #include <intrins.h>
+   4          
+   5          sbit I2C_SCL=P2^1;
+   6          sbit I2C_SDA=P2^0;
+   7          
+   8          void Delay5ms() 
+   9          {  
+  10   1          unsigned int i, j;
+  11   1          for(i=5;i>0;i--)
+  12   1              for(j=112;j>0;j--);
+  13   1      }
+  14          
+  15          void I2C_Delay(void) 
+  16          {
+  17   1          unsigned char i;
+  18   1          _nop_(); _nop_(); _nop_(); _nop_();  
+  19   1          i = 2; while (--i);  
+  20   1      }
+  21          
+  22          void I2C_Start(void)
+  23          {
+  24   1        I2C_SDA=1;
+  25   1        I2C_SCL=1;
+  26   1          I2C_Delay();
+  27   1        I2C_SDA=0;
+  28   1          I2C_Delay(); 
+  29   1        I2C_SCL=0;
+  30   1      }
+  31          
+  32          
+  33          void I2C_Stop(void)
+  34          {
+  35   1        I2C_SDA=0;
+  36   1        I2C_SCL=1;
+  37   1          I2C_Delay();
+  38   1        I2C_SDA=1;
+  39   1          I2C_Delay();  
+  40   1      }
+  41          
+  42          void I2C_SendByte(unsigned char Byte)
+  43          {
+  44   1        unsigned char i;
+  45   1        for(i=0;i<8;i++)
+  46   1        {
+  47   2          I2C_SDA=Byte&(0x80>>i);
+  48   2            I2C_Delay();
+  49   2          I2C_SCL=1;
+  50   2            I2C_Delay();
+  51   2          I2C_SCL=0;
+  52   2        }
+  53   1      }
+  54          
+  55          
+C51 COMPILER V9.56.0.0   I2C                                                               07/20/2025 14:37:58 PAGE 2   
+
+  56          unsigned char I2C_ReceiveByte(void)
+  57          {
+  58   1        unsigned char i,Byte=0x00;
+  59   1        I2C_SDA=1;
+  60   1        for(i=0;i<8;i++)
+  61   1        {
+  62   2          I2C_SCL=1;
+  63   2            I2C_Delay();
+  64   2          if(I2C_SDA){Byte|=(0x80>>i);}
+  65   2          I2C_SCL=0;
+  66   2          I2C_Delay();
+  67   2        }
+  68   1        return Byte;
+  69   1      }
+  70          
+  71          // 此处有问题吗？
+  72          void I2C_SendAck(unsigned char AckBit)
+  73          {
+  74   1        I2C_SDA=~AckBit;
+  75   1          I2C_Delay();
+  76   1        I2C_SCL=1;
+  77   1          I2C_Delay();
+  78   1        I2C_SCL=0;
+  79   1        I2C_SDA = 1;
+  80   1        I2C_Delay();
+  81   1      }
+  82          
+  83          // 此处有问题吗？
+  84          unsigned char I2C_ReceiveAck(void)
+  85          {
+  86   1        unsigned char AckBit;
+  87   1        I2C_SDA=1;
+  88   1        I2C_Delay();
+  89   1        I2C_SCL=1;
+  90   1        I2C_Delay();
+  91   1      
+  92   1        AckBit=I2C_SDA;
+  93   1        if (I2C_SDA) {
+  94   2          I2C_Stop();
+  95   2        }
+  96   1        I2C_SCL=0;
+  97   1        return ~AckBit;
+  98   1      }
+  99          void AT24C02_WriteByte(unsigned char WordAddress,unsigned char Data)
+ 100          {
+ 101   1        I2C_Start();
+ 102   1        I2C_SendByte(ADDR_24C02);
+ 103   1        I2C_ReceiveAck();
+ 104   1        I2C_SendByte(WordAddress);
+ 105   1        I2C_ReceiveAck();
+ 106   1        I2C_SendByte(Data);
+ 107   1        I2C_ReceiveAck();
+ 108   1        I2C_Stop();
+ 109   1        Delay5ms();
+ 110   1      }
+ 111          
+ 112          
+ 113          unsigned char AT24C02_ReadByte(unsigned char WordAddress)
+ 114          {
+ 115   1        unsigned char Data;
+ 116   1        I2C_Start();
+ 117   1        I2C_SendByte(ADDR_24C02);
+C51 COMPILER V9.56.0.0   I2C                                                               07/20/2025 14:37:58 PAGE 3   
+
+ 118   1        I2C_ReceiveAck();
+ 119   1        I2C_SendByte(WordAddress);
+ 120   1        I2C_ReceiveAck();
+ 121   1        I2C_Start();
+ 122   1        I2C_SendByte(ADDR_24C02|0x01);
+ 123   1        I2C_ReceiveAck();
+ 124   1        Data=I2C_ReceiveByte();
+ 125   1        I2C_SendAck(1);
+ 126   1        I2C_Stop();
+ 127   1        return Data;
+ 128   1      }
+ 129          unsigned int PCF_ReadIN1()
+ 130          {
+ 131   1        
+ 132   1        unsigned int Data;
+ 133   1        
+ 134   1        I2C_Start();
+ 135   1        I2C_SendByte(0x90);
+ 136   1        // I2C_ReceiveAck();
+ 137   1        if (!I2C_ReceiveAck()) return 0xFF;
+ 138   1        I2C_SendByte(0x01);
+ 139   1        // I2C_ReceiveAck();
+ 140   1        if (!I2C_ReceiveAck()) return 0xFF;
+ 141   1        I2C_Stop();
+ 142   1        
+ 143   1        I2C_Start();
+ 144   1        I2C_SendByte(0x91);
+ 145   1        // I2C_ReceiveAck();
+ 146   1        if (!I2C_ReceiveAck()) return 0xFF;
+ 147   1      
+ 148   1        Data=I2C_ReceiveByte();
+ 149   1        I2C_SendAck(0);
+ 150   1        I2C_Stop();
+ 151   1        
+ 152   1        Data = (unsigned int)(Data * 5000.0 / 255);
+ 153   1        
+ 154   1        return Data;
+ 155   1        
+ 156   1      }
+ 157          
+ 158          
+ 159          unsigned int PCF_ReadIN0()
+ 160          {
+ 161   1        
+ 162   1        unsigned int Data;
+ 163   1        
+ 164   1        I2C_Start();
+ 165   1        I2C_SendByte(0x90);
+ 166   1        // I2C_ReceiveAck();
+ 167   1        if (!I2C_ReceiveAck()) return 0xFF;
+ 168   1        I2C_SendByte(0x00);
+ 169   1        // I2C_ReceiveAck();
+ 170   1        if (!I2C_ReceiveAck()) return 0xFF;
+ 171   1        I2C_Stop();
+ 172   1        
+ 173   1        I2C_Start();
+ 174   1        I2C_SendByte(0x91);
+ 175   1        // I2C_ReceiveAck();
+ 176   1        if (!I2C_ReceiveAck()) return 0xFF;
+ 177   1      
+ 178   1        Data=I2C_ReceiveByte();
+ 179   1        I2C_SendAck(0);
+C51 COMPILER V9.56.0.0   I2C                                                               07/20/2025 14:37:58 PAGE 4   
+
+ 180   1        I2C_Stop();
+ 181   1        
+ 182   1        Data = (unsigned int)(Data * 5000.0 / 255);
+ 183   1        
+ 184   1        return Data;
+ 185   1        
+ 186   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    424    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

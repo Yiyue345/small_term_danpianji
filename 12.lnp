@@ -1,9 +1,9 @@
 "delay.obj",
 "keyboard.obj",
 "smg.obj",
-"iic.obj",
 "ls138.obj",
 "main.obj",
-"ds1302.obj" 
+"ds1302.obj",
+"I2C.obj" 
 TO "12" 
 RAMSIZE(256) 

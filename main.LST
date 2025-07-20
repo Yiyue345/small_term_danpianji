@@ -1,4 +1,4 @@
-C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:57:08 PAGE 1   
+C51 COMPILER V9.56.0.0   MAIN                                                              07/20/2025 14:46:44 PAGE 1   
 
 
 C51 COMPILER V9.56.0.0, COMPILATION OF MODULE MAIN
@@ -11,9 +11,9 @@ line level    source
    2          #include "ls138.h"
    3          #include "smg.h"
    4          #include "delay.h"
-   5          #include "iic.h"
-   6          #include "keyboard.h"
-   7          #include "ds1302.h"
+   5          #include "keyboard.h"
+   6          #include "ds1302.h"
+   7          #include "I2C.h"
    8          
    9          sbit  RST=P2^4;         
   10          sbit  CLK=P2^3;          
@@ -23,214 +23,247 @@ line level    source
   14          sbit L8 = P0^7;
   15          
   16          unsigned char second, minute, hour, key, choose = 0, flag = 0, timerMode = 0;
-  17          // 定时器T0初始化
-  18          void InitTimer0()
-  19          {
-  20   1        TMOD = 0x01;
-  21   1        TH0 = (65535 - 50000) / 256;
-  22   1        TL0 = (65535 - 50000) % 256;
-  23   1        
-  24   1        ET0 = 1;
-  25   1        EA = 1;
-  26   1        TR0 = 1;
-  27   1      }
-  28          
-  29          void Init_smgled(){
-  30   1      
-  31   1      }
-  32          
-  33          
-  34          void updatesmg(){
-  35   1       
-  36   1      }
-  37          
-  38          // 定时器T0中断服务函数
-  39          unsigned char count = 0;
-  40          void serviceTimer0() interrupt 1{
-  41   1        TH0 = (65535 - 50000) / 256;
-  42   1        TL0 = (65535 - 50000) % 256;
-  43   1      
-  44   1        count++;
-  45   1        if(count % 20 == 0 && timerMode == 4) {
-  46   2          // 先显示完整的时间，确保所有位置都有正确的数字
-  47   2          syncBufTime();
-  48   2          
-  49   2          // 然后根据选择的位置进行闪烁
-  50   2          if (flag == 0) {
-  51   3            flag = 1;
-  52   3            // 闪烁时将选中的位置设为空白（或关闭）
-  53   3            if (choose == 0) {
-  54   4              updateLed(0, 10);  // 10 对应空白
-  55   4              updateLed(1, 10);
-C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:57:08 PAGE 2   
+  17          unsigned int v = 0;
+  18          sbit I2C_SCL=P2^1;
+  19          sbit I2C_SDA=P2^0;
+  20          // 定时器T0初始化
+  21          void InitTimer0()
+  22          {
+  23   1        TMOD = 0x01;
+  24   1        TH0 = (65535 - 50000) / 256;
+  25   1        TL0 = (65535 - 50000) % 256;
+  26   1        
+  27   1        ET0 = 1;
+  28   1        EA = 1;
+  29   1        TR0 = 1;
+  30   1      }
+  31          
+  32          void Init_smgled(){
+  33   1      
+  34   1      }
+  35          
+  36          
+  37          void updatesmg(){
+  38   1       
+  39   1      }
+  40          
+  41          // 定时器T0中断服务函数
+  42          unsigned char count = 0;
+  43          void serviceTimer0() interrupt 1{
+  44   1        TH0 = (65535 - 50000) / 256;
+  45   1        TL0 = (65535 - 50000) % 256;
+  46   1      
+  47   1        count++;
+  48   1        if(count % 20 == 0 && timerMode == 4) {
+  49   2          // 先显示完整的时间，确保所有位置都有正确的数字
+  50   2          syncBufTime();
+  51   2          
+  52   2          // 然后根据选择的位置进行闪烁
+  53   2          if (flag == 0) {
+  54   3            flag = 1;
+  55   3            // 闪烁时将选中的位置设为空白（或关闭）
+C51 COMPILER V9.56.0.0   MAIN                                                              07/20/2025 14:46:44 PAGE 2   
 
-  56   4            }
-  57   3            else if (choose == 1) {
-  58   4              updateLed(3, 10);
-  59   4              updateLed(4, 10);
-  60   4            }
-  61   3            else if (choose == 2) {
-  62   4              updateLed(6, 10);
-  63   4              updateLed(7, 10);
-  64   4            }
-  65   3          }
-  66   2          else {
-  67   3            flag = 0;
-  68   3            // 恢复显示时，所有位置都会在syncBufTime()中被正确设置
-  69   3            // 不需要额外操作，因为上面已经调用了syncBufTime()
-  70   3          }
-  71   2        }
-  72   1        if(count == 100)
-  73   1        {
-  74   2          count = 0;
-  75   2        }
-  76   1      }
-  77            
-  78          
-  79          void main() {
-  80   1      
-  81   1        // 初始化定时器
-  82   1        InitTimer0();
-  83   1        
-  84   1        // // 初始化DS1302
-  85   1        // Ds1302_Init();
-  86   1        
-  87   1        // // 延时一下让DS1302稳定
-  88   1        // delay(100);
+  56   3            if (choose == 0) {
+  57   4              updateLed(0, 10);  // 10 对应空白
+  58   4              updateLed(1, 10);
+  59   4            }
+  60   3            else if (choose == 1) {
+  61   4              updateLed(3, 10);
+  62   4              updateLed(4, 10);
+  63   4            }
+  64   3            else if (choose == 2) {
+  65   4              updateLed(6, 10);
+  66   4              updateLed(7, 10);
+  67   4            }
+  68   3          }
+  69   2          else {
+  70   3            flag = 0;
+  71   3            // 恢复显示时，所有位置都会在syncBufTime()中被正确设置
+  72   3            // 不需要额外操作，因为上面已经调用了syncBufTime()
+  73   3          }
+  74   2        }
+  75   1        if(count == 100)
+  76   1        {
+  77   2          count = 0;
+  78   2        }
+  79   1      }
+  80            
+  81          
+  82          void main() {
+  83   1      
+  84   1        I2C_SCL = 1;
+  85   1        I2C_SDA = 1;
+  86   1        v = PCF_ReadIN0();
+  87   1        // 初始化定时器
+  88   1        InitTimer0();
   89   1        
-  90   1        // // 写入默认时间
-  91   1        // Ds1302_Write_Time(); 
+  90   1        // // 初始化DS1302
+  91   1        // Ds1302_Init();
   92   1        
-  93   1        // // 再次延时
+  93   1        // // 延时一下让DS1302稳定
   94   1        // delay(100);
-  95   1      
-  96   1        SelectHC573(1);
-  97   1        Ds1302_Init();
-  98   1      
-  99   1        Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
- 100   1        // Ds1302_Write_Byte(0x80, 0x00); // 使能写操作
- 101   1        // 写入默认时间
- 102   1        Ds1302_Init_Time(); 
-*** WARNING C206 IN LINE 102 OF main.c: 'Ds1302_Init_Time': missing function-prototype
- 103   1        Ds1302_Write_Byte(0x8e, 0x80); // 启用写保护
- 104   1        
- 105   1        clearLed(); 
- 106   1      
- 107   1        
- 108   1        while (1) {
- 109   2          key = readKey(); // 扫描按键
- 110   2      
- 111   2          if (key == 7) {
- 112   3            while (1) {
- 113   4              // 读取当前时间
- 114   4              Ds1302_Read_Time();
- 115   4              
- 116   4              // 显示时-分-秒 格式
-C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:57:08 PAGE 3   
+  95   1        
+  96   1        // // 写入默认时间
+  97   1        // Ds1302_Write_Time(); 
+  98   1        
+  99   1        // // 再次延时
+ 100   1        // delay(100);
+ 101   1      
+ 102   1        SelectHC573(1);
+ 103   1        Ds1302_Init();
+ 104   1      
+ 105   1        Ds1302_Write_Byte(0x8e, 0x00); // 禁止写保护
+ 106   1        // Ds1302_Write_Byte(0x80, 0x00); // 使能写操作
+ 107   1        // 写入默认时间
+ 108   1        Ds1302_Init_Time(); 
+*** WARNING C206 IN LINE 108 OF main.c: 'Ds1302_Init_Time': missing function-prototype
+ 109   1        Ds1302_Write_Byte(0x8e, 0x80); // 启用写保护
+ 110   1        
+ 111   1        clearLed(); 
+ 112   1      
+ 113   1        while (1) {
+ 114   2          key = readKey(); // 扫描按键
+ 115   2      
+ 116   2          if (key == 7) {
+C51 COMPILER V9.56.0.0   MAIN                                                              07/20/2025 14:46:44 PAGE 3   
 
- 117   4              syncBufTime(); // 显示当前时间
- 118   4              showLed(); 
- 119   4              
- 120   4              // 添加延时，避免读取过于频繁
- 121   4              delayMs(1);
- 122   4              key = readKey();
- 123   4      
- 124   4              if (key == 7) {
- 125   5                clearLed();
- 126   5                break;
- 127   5              } 
- 128   4              else if (key == 4) {
- 129   5                timerMode = 4;
- 130   5                // 进入设置时间模式
- 131   5                clearLed();
- 132   5                syncBufTime();
- 133   5                while (1) {
- 134   6                  // 在设置模式下，不要频繁调用showLed()
- 135   6                  // 让中断函数来处理显示和闪烁
- 136   6                  showLed();
- 137   6      
- 138   6                  key = readKey();
- 139   6      
- 140   6                  if (key == 7) {
- 141   7                    clearLed();
- 142   7                    timerMode = 0;
- 143   7                    choose = 0;
- 144   7                    Ds1302_Write_Time();
- 145   7                    break;
- 146   7                  } 
- 147   6                  else if (key == 4) {
- 148   7                    choose++;
- 149   7                    choose %= 3;
- 150   7                  }
- 151   6                  else if (key == 11) {
- 152   7                    // 进入设置秒
- 153   7                    if (choose == 2) {
- 154   8                      cur_time_buf[0]++;
- 155   8                      if (cur_time_buf[0] >= 60) {
- 156   9                        cur_time_buf[0] = 0;
- 157   9                      }
- 158   8                    } 
- 159   7                    // 进入设置分
- 160   7                    else if (choose == 1) {
- 161   8                      cur_time_buf[1]++;
- 162   8                      if (cur_time_buf[1] >= 60) {
- 163   9                        cur_time_buf[1] = 0;
- 164   9                      }
- 165   8                    } 
- 166   7                    // 进入设置时
- 167   7                    else if (choose == 0) {
- 168   8                      cur_time_buf[2]++;
- 169   8                      if (cur_time_buf[2] >= 24) {
- 170   9                        cur_time_buf[2] = 0;
- 171   9                      }
- 172   8                    }
- 173   7                  }
- 174   6      
- 175   6                  else if (key == 10) {
- 176   7                    // 进入设置秒
- 177   7                    if (choose == 2) {
- 178   8                      cur_time_buf[0]--;
-C51 COMPILER V9.56.0.0   MAIN                                                              07/13/2025 23:57:08 PAGE 4   
+ 117   3            while (1) {
+ 118   4              // 读取当前时间
+ 119   4              Ds1302_Read_Time();
+ 120   4              
+ 121   4              // 显示时-分-秒 格式
+ 122   4              syncBufTime(); // 显示当前时间
+ 123   4              showLed(); 
+ 124   4              
+ 125   4              // 添加延时，避免读取过于频繁
+ 126   4              delayMs(1);
+ 127   4              key = readKey();
+ 128   4      
+ 129   4              if (key == 7) {
+ 130   5                clearLed();
+ 131   5                break;
+ 132   5              } 
+ 133   4              else if (key == 4) {
+ 134   5                timerMode = 4;
+ 135   5                // 进入设置时间模式
+ 136   5                clearLed();
+ 137   5                syncBufTime();
+ 138   5                while (1) {
+ 139   6                  // 在设置模式下，不要频繁调用showLed()
+ 140   6                  // 让中断函数来处理显示和闪烁
+ 141   6                  showLed();
+ 142   6      
+ 143   6                  key = readKey();
+ 144   6      
+ 145   6                  if (key == 7) {
+ 146   7                    clearLed();
+ 147   7                    timerMode = 0;
+ 148   7                    choose = 0;
+ 149   7                    Ds1302_Write_Time();
+ 150   7                    break;
+ 151   7                  } 
+ 152   6                  else if (key == 4) {
+ 153   7                    choose++;
+ 154   7                    choose %= 3;
+ 155   7                  }
+ 156   6                  else if (key == 11) {
+ 157   7                    // 进入设置秒
+ 158   7                    if (choose == 2) {
+ 159   8                      cur_time_buf[0]++;
+ 160   8                      if (cur_time_buf[0] >= 60) {
+ 161   9                        cur_time_buf[0] = 0;
+ 162   9                      }
+ 163   8                    } 
+ 164   7                    // 进入设置分
+ 165   7                    else if (choose == 1) {
+ 166   8                      cur_time_buf[1]++;
+ 167   8                      if (cur_time_buf[1] >= 60) {
+ 168   9                        cur_time_buf[1] = 0;
+ 169   9                      }
+ 170   8                    } 
+ 171   7                    // 进入设置时
+ 172   7                    else if (choose == 0) {
+ 173   8                      cur_time_buf[2]++;
+ 174   8                      if (cur_time_buf[2] >= 24) {
+ 175   9                        cur_time_buf[2] = 0;
+ 176   9                      }
+ 177   8                    }
+ 178   7                  }
+C51 COMPILER V9.56.0.0   MAIN                                                              07/20/2025 14:46:44 PAGE 4   
 
- 179   8                      if (cur_time_buf[0] < 0) {
- 180   9                        cur_time_buf[0] = 59;
- 181   9                      }
- 182   8                    } 
- 183   7                    // 进入设置分
- 184   7                    else if (choose == 1) {
- 185   8                      cur_time_buf[1]--;
- 186   8                      if (cur_time_buf[1] < 0) {
- 187   9                        cur_time_buf[1] = 59;
- 188   9                      }
- 189   8                    } 
- 190   7                    // 进入设置时
- 191   7                    else if (choose == 0) {
- 192   8                      cur_time_buf[2]--;
- 193   8                      if (cur_time_buf[2] < 0) {
- 194   9                        cur_time_buf[2] = 23;
- 195   9                      }
- 196   8                    }
- 197   7                  }
- 198   6                  
- 199   6                  showLed();
- 200   6                }
- 201   5              }
- 202   4            }
- 203   3          
- 204   3      
- 205   3          }
- 206   2          
- 207   2        }
- 208   1        
- 209   1      }
+ 179   6      
+ 180   6                  else if (key == 10) {
+ 181   7                    // 进入设置秒
+ 182   7                    if (choose == 2) {
+ 183   8                      cur_time_buf[0]--;
+ 184   8                      if (cur_time_buf[0] < 0) {
+ 185   9                        cur_time_buf[0] = 59;
+ 186   9                      }
+ 187   8                    } 
+ 188   7                    // 进入设置分
+ 189   7                    else if (choose == 1) {
+ 190   8                      cur_time_buf[1]--;
+ 191   8                      if (cur_time_buf[1] < 0) {
+ 192   9                        cur_time_buf[1] = 59;
+ 193   9                      }
+ 194   8                    } 
+ 195   7                    // 进入设置时
+ 196   7                    else if (choose == 0) {
+ 197   8                      cur_time_buf[2]--;
+ 198   8                      if (cur_time_buf[2] < 0) {
+ 199   9                        cur_time_buf[2] = 23;
+ 200   9                      }
+ 201   8                    }
+ 202   7                  }
+ 203   6                  
+ 204   6                  showLed();
+ 205   6                }
+ 206   5              }
+ 207   4            }
+ 208   3          
+ 209   3      
+ 210   3          }
+ 211   2          else if (key == 6) {
+ 212   3            clearLed();
+ 213   3            while (1) {
+ 214   4              ET0 = 0; // 关闭定时器中断
+ 215   4              v = PCF_ReadIN0();
+ 216   4              ET0 = 1; // 重新开启定时器中断
+ 217   4      
+ 218   4              updateLed(0, 11);
+ 219   4              updateLed(1, 1);
+ 220   4              updateLed(2, 11);
+ 221   4              updateLed(3, 10);
+ 222   4      
+ 223   4              updateLed(4, v / 1000);
+ 224   4              updateLed(5, (v % 1000) / 100);
+ 225   4              updateLed(6, (v % 100) / 10);
+ 226   4              updateLed(7, v % 10);
+ 227   4      
+ 228   4              showLed();
+ 229   4      
+ 230   4              key = readKey();
+ 231   4              if (key == 7) {
+ 232   5                clearLed();
+ 233   5                break;
+ 234   5              }
+ 235   4            }
+ 236   3          }
+ 237   2          
+ 238   2        }
+ 239   1        
+ 240   1      }
+C51 COMPILER V9.56.0.0   MAIN                                                              07/20/2025 14:46:44 PAGE 5   
+
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    431    ----
+   CODE SIZE        =    616    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =      8    ----
+   DATA SIZE        =     10    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
