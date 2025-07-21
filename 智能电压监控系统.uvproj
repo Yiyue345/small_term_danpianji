@@ -379,11 +379,6 @@
               <FilePath>.\smg.c</FilePath>
             </File>
             <File>
-              <FileName>iic.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\iic.c</FilePath>
-            </File>
-            <File>
               <FileName>ls138.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\ls138.c</FilePath>
@@ -402,6 +397,11 @@
               <FileName>ds1302.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\ds1302.c</FilePath>
+            </File>
+            <File>
+              <FileName>I2C.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\I2C.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -68,7 +68,6 @@ unsigned char I2C_ReceiveByte(void)
 	return Byte;
 }
 
-// 此处有问题吗？
 void I2C_SendAck(unsigned char AckBit)
 {
 	I2C_SDA=~AckBit;
@@ -80,7 +79,6 @@ void I2C_SendAck(unsigned char AckBit)
 	I2C_Delay();
 }
 
-// 此处有问题吗？
 unsigned char I2C_ReceiveAck(void)
 {
 	unsigned char AckBit;
